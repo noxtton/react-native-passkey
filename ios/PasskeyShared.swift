@@ -359,14 +359,27 @@ internal struct AuthenticationExtensionsPRFInputs: Decodable {
         init(from decoder: any Decoder) throws {
             let values = try decoder.container(keyedBy: CodingKeys.self)
 
-            // RN converts UInt8Array to Dictionary; decode it
-            let firstDict = try values.decodeIfPresent([String: Int].self, forKey: .first)
-            if let dict = firstDict {
-                let sortedValues = dict.sorted(by: { $0.key < $1.key }).map { UInt8($0.value) }
-                first = Data(sortedValues)
-            } else {
-                throw DecodingError.dataCorruptedError(forKey: .first, in: values, debugDescription: "Failed to decode 'first'")
+            // Try to decode as dictionary first (UInt8Array converted to Dictionary by RN)
+            if let firstDict = try? values.decodeIfPresent([String: Int].self, forKey: .first) {
+                if let dict = firstDict {
+                    let sortedValues = dict.sorted(by: { $0.key < $1.key }).map { UInt8($0.value) }
+                    first = Data(sortedValues)
+                    return
+                }
             }
+
+            // If not a dictionary, try to decode as string (base64 encoded)
+            if let firstString = try? values.decode(String.self, forKey: .first) {
+                if let data = Data(base64Encoded: firstString) {
+                    first = data
+                    return
+                } else if let data = Data(base64URLEncoded: firstString) {
+                    first = data
+                    return
+                }
+            }
+
+            throw DecodingError.dataCorruptedError(forKey: .first, in: values, debugDescription: "Failed to decode 'first' as either dictionary or base64 string")
         }
     }
     var eval: Eval
