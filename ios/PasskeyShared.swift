@@ -360,12 +360,10 @@ internal struct AuthenticationExtensionsPRFInputs: Decodable {
             let values = try decoder.container(keyedBy: CodingKeys.self)
 
             // Try to decode as dictionary first (UInt8Array converted to Dictionary by RN)
-            if let firstDict = try? values.decodeIfPresent([String: Int].self, forKey: .first) {
-                if let dict = firstDict {
-                    let sortedValues = dict.sorted(by: { $0.key < $1.key }).map { UInt8($0.value) }
-                    first = Data(sortedValues)
-                    return
-                }
+            if let firstDict = try? values.decodeIfPresent([String: Int].self, forKey: .first), !firstDict.isEmpty {
+                let sortedValues = firstDict.sorted(by: { $0.key < $1.key }).map { UInt8($0.value) }
+                first = Data(sortedValues)
+                return
             }
 
             // If not a dictionary, try to decode as string (base64 encoded)
