@@ -77,10 +77,10 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
     if #available(iOS 18.0, *) {
       if let prfOutput = credential.prf { // Safely unwrap `credential.prf`
         if let first = prfOutput.first { // Safely unwrap `first`
-          let keyBytes: [UInt8] = first.withUnsafeBytes { Array($0) }
-          let uintArray: [UInt] = keyBytes.map { UInt($0) }
+          // Convert Data to base64url-encoded string
+          let base64UrlString = first.toBase64URLEncodedString()
           // Create the PRF results
-          var prfResults = AuthenticationExtensionsPRFValue(first: uintArray);
+          var prfResults = AuthenticationExtensionsPRFValue(first: base64UrlString);
           // Assign to the `prf` variable
           prf = AuthenticationExtensionsPrfOutputsJSON(results: prfResults)
         }
@@ -153,10 +153,10 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
     var prf: AuthenticationExtensionsPrfOutputsJSON?;
     if #available(iOS 18.0, *), let result = credential.prf {
       let first = result.first
-      let keyBytes: [UInt8] = first.withUnsafeBytes { Array($0) }
-      let uintArray: [UInt] = keyBytes.map { UInt($0) }
+      // Convert Data to base64url-encoded string
+      let base64UrlString = first.toBase64URLEncodedString()
       // Create the PRF results
-      var prfResults = AuthenticationExtensionsPRFValue(first: uintArray);
+      var prfResults = AuthenticationExtensionsPRFValue(first: base64UrlString);
       // Assign to the `prf` variable
       prf = AuthenticationExtensionsPrfOutputsJSON(results: prfResults)
     }

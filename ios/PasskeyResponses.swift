@@ -112,6 +112,6 @@ var results: AuthenticationExtensionsPRFValue;
 }
 
 internal struct AuthenticationExtensionsPRFValue: Encodable {
-var first: [UInt];
-var second: [UInt]?;
+var first: String;
+var second: String?;
 }
