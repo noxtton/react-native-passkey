@@ -1,5 +1,6 @@
 import Foundation
 import AuthenticationServices
+import CryptoKit
 
 @available(iOS 15.0, *)
 protocol RNPasskeyResultHandler {
@@ -77,8 +78,9 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
     if #available(iOS 18.0, *) {
       if let prfOutput = credential.prf { // Safely unwrap `credential.prf`
         if let first = prfOutput.first { // Safely unwrap `first`
-          // Convert Data to base64url-encoded string
-          let base64UrlString = first.toBase64URLEncodedString()
+          // Convert SymmetricKey to Data, then to base64url-encoded string
+          let keyData = Data(first.withUnsafeBytes { Array($0) })
+          let base64UrlString = keyData.toBase64URLEncodedString()
           // Create the PRF results
           var prfResults = AuthenticationExtensionsPRFValue(first: base64UrlString);
           // Assign to the `prf` variable
@@ -153,8 +155,9 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
     var prf: AuthenticationExtensionsPrfOutputsJSON?;
     if #available(iOS 18.0, *), let result = credential.prf {
       let first = result.first
-      // Convert Data to base64url-encoded string
-      let base64UrlString = first.toBase64URLEncodedString()
+      // Convert SymmetricKey to Data, then to base64url-encoded string
+      let keyData = Data(first.withUnsafeBytes { Array($0) })
+      let base64UrlString = keyData.toBase64URLEncodedString()
       // Create the PRF results
       var prfResults = AuthenticationExtensionsPRFValue(first: base64UrlString);
       // Assign to the `prf` variable
