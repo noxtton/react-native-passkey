@@ -182,9 +182,16 @@ class Passkey: NSObject, RNPasskeyResultHandler {
 
     if #available(iOS 18.0, *) {
       if let prf = request.extensions?.prf {
-        let prfInput = ASAuthorizationPublicKeyCredentialPRFRegistrationInput.self.InputValues(saltInput1: prf.eval.first)
-        let prfObj = ASAuthorizationPublicKeyCredentialPRFRegistrationInput.inputValues(prfInput)
-        authRequest.prf = prfObj
+        if let eval = prf.eval {
+          let prfInput = ASAuthorizationPublicKeyCredentialPRFRegistrationInput.self.InputValues(saltInput1: eval.first)
+          let prfObj = ASAuthorizationPublicKeyCredentialPRFRegistrationInput.inputValues(prfInput)
+          authRequest.prf = prfObj
+        } else if let evalByCredential = prf.evalByCredential, let firstEval = evalByCredential.values.first {
+          // For registration, we can just use the first evalByCredential value if eval is not present
+          let prfInput = ASAuthorizationPublicKeyCredentialPRFRegistrationInput.self.InputValues(saltInput1: firstEval.first)
+          let prfObj = ASAuthorizationPublicKeyCredentialPRFRegistrationInput.inputValues(prfInput)
+          authRequest.prf = prfObj
+        }
       }
     }
 
@@ -215,9 +222,21 @@ class Passkey: NSObject, RNPasskeyResultHandler {
 
     if #available(iOS 18.0, *) {
       if let prf = request.extensions?.prf {
-        let prfInput = ASAuthorizationPublicKeyCredentialPRFAssertionInput.self.InputValues(saltInput1: prf.eval.first)
-        let prfObj = ASAuthorizationPublicKeyCredentialPRFAssertionInput.inputValues(prfInput)
-        authRequest.prf = prfObj
+        if let eval = prf.eval {
+          let prfInput = ASAuthorizationPublicKeyCredentialPRFAssertionInput.self.InputValues(saltInput1: eval.first)
+          let prfObj = ASAuthorizationPublicKeyCredentialPRFAssertionInput.inputValues(prfInput)
+          authRequest.prf = prfObj
+        } else if let evalByCredential = prf.evalByCredential, let allowCredentials = request.allowCredentials, !allowCredentials.isEmpty {
+          // Find the first matching credential ID in evalByCredential
+          for credential in allowCredentials {
+            if let evalData = evalByCredential[credential.id] {
+              let prfInput = ASAuthorizationPublicKeyCredentialPRFAssertionInput.self.InputValues(saltInput1: evalData.first)
+              let prfObj = ASAuthorizationPublicKeyCredentialPRFAssertionInput.inputValues(prfInput)
+              authRequest.prf = prfObj
+              break
+            }
+          }
+        }
       }
 
       if let largeBlobWriteData = request.extensions?.largeBlob?.write {
@@ -299,4 +318,3 @@ class Passkey: NSObject, RNPasskeyResultHandler {
     handler.reject(error.type.rawValue, error.message, nil);
   }
 }
-

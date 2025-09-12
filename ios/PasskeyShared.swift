@@ -380,14 +380,19 @@ internal struct AuthenticationExtensionsPRFInputs: Decodable {
             throw DecodingError.dataCorruptedError(forKey: .first, in: values, debugDescription: "Failed to decode 'first' as either dictionary or base64 string")
         }
     }
-    var eval: Eval
+
+    var eval: Eval?
+    var evalByCredential: [String: Eval]?
+
     enum CodingKeys: String, CodingKey {
         case eval
+        case evalByCredential
     }
 
     init(from decoder: any Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
-        eval = try values.decode(Eval.self, forKey: .eval)
+        eval = try values.decodeIfPresent(Eval.self, forKey: .eval)
+        evalByCredential = try values.decodeIfPresent([String: Eval].self, forKey: .evalByCredential)
     }
 }
 /**
