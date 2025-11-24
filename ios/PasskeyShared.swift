@@ -424,7 +424,7 @@ internal struct AuthenticationExtensionsPRFInputs: Decodable {
         
         for credentialDict in credentialsArray {
             for (credentialID, prfValues) in credentialDict {
-                let credentialIDData = credentialID.data(using: .utf8) ?? Data()
+                let credentialIDData = Data(base64URLEncoded: credentialID) ?? Data()
                 let convertedValues = AuthenticationExtensionsPRFValues(
                   first: prfValues.first,
                   second: prfValues.second
